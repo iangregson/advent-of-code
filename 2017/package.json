@@ -1,0 +1,17 @@
+{
+  "name": "adventofcode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js -q -x 'clear && node'",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "nodemon": "nodemon"
+  },
+  "keywords": [],
+  "author": "Ian Gregson <ian@gregson.me> (https://github.com/iangregson)",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^1.12.1"
+  }
+}
