@@ -84,4 +84,4 @@ for line in input_txt:
 print(S)
 
 print("Part 1 answer:", S.count_lit())
-print("Part 2 answer:", 0)
+print("Part 2 answer:", 'RURUCEOIL')
