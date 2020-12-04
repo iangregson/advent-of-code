@@ -47,3 +47,35 @@ for line in lines:
     valid_pws.append(pw)
 
 print('Part 2:', len(valid_pws))
+
+valid_pws = []
+
+for line in lines:
+  pos_1, pos_2, char, pw = parse_line(line)
+  if (pw[pos_1 - 1] == char) ^ (pw[pos_2 - 1] == char):
+    valid_pws.append(pw)
+
+
+print('Part 2 (with XOR):', len(valid_pws))
+
+valid_pws = 0
+total_reqs = 3
+
+for line in lines:
+  reqs_met = 0
+  pos_1, pos_2, char, pw = parse_line(line)
+  if pw.count(char) in list(range(pos_1, pos_2 + 1)):
+    reqs_met += 1
+
+  if pw[pos_1 - 1] == char:
+    reqs_met += 1
+  
+  if pw[pos_2 - 1] == char:
+    reqs_met += 1
+
+  if reqs_met == total_reqs:
+    valid_pws += 1
+
+
+print('Part 3 (ALLTHEREQUIREMENTS):', valid_pws)
+
