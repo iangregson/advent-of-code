@@ -19,6 +19,16 @@ lines = [l.strip() for l in file.readlines()]
 #   'dotted black bags contain no other bags.',
 # ]
 
+# lines = [
+#   'shiny gold bags contain 2 dark red bags.',
+#   'dark red bags contain 2 dark orange bags.',
+#   'dark orange bags contain 2 dark yellow bags.',
+#   'dark yellow bags contain 2 dark green bags.',
+#   'dark green bags contain 2 dark blue bags.',
+#   'dark blue bags contain 2 dark violet bags.',
+#   'dark violet bags contain no other bags.',
+# ]
+
 G = defaultdict(list)
 
 for line in lines:
@@ -64,40 +74,6 @@ for node in G:
 
 
 print('Part 1:', total_bags)
-
-# lines = [
-#   'shiny gold bags contain 2 dark red bags.',
-#   'dark red bags contain 2 dark orange bags.',
-#   'dark orange bags contain 2 dark yellow bags.',
-#   'dark yellow bags contain 2 dark green bags.',
-#   'dark green bags contain 2 dark blue bags.',
-#   'dark blue bags contain 2 dark violet bags.',
-#   'dark violet bags contain no other bags.',
-# ]
-
-G = defaultdict(list)
-
-for line in lines:
-  words = line.split()
-  node = " ".join(words[:2])
-
-  G[node] = []
-  
-  if 'contain no other' in line:
-    continue
-  
-  if ',' in line:
-    for i in range(0, line.count(',') + 1):
-      leaf = " ".join(words[-3:-1])
-      leaf_n = int(words[-4])
-      G[node].append((leaf_n, leaf))
-      words = words[:-4]
-  else:
-    leaf = " ".join(words[-3:-1])
-    leaf_n = int(words[-4])
-    G[node].append((leaf_n, leaf))
-
-# print(G)
 
 def count_bags(node):
   bags = 0
