@@ -43,20 +43,19 @@ for idx, n in enumerate(numbers):
 print('Part 1:', result)
 
 target = result
-target_range = None
 start_idx = 0
-while not target_range:
-  n_range = []
-  # print('\n start range')
+while True:
+  n_range = set()
+  total = 0
   for i in range(start_idx, len(numbers)):
-    n_range.append(numbers[i])
-    # print(n_range)
-    if sum(n_range) >= target:
+    n_range.add(numbers[i])
+    total += numbers[i]
+    if total >= target:
       break
     
-  if sum(n_range) == target:
-    target_range = n_range
+  if total == target:
+    print('Part 2:', min(n_range) + max(n_range))
+    break
   else:
     start_idx += 1
 
-print('Part 2:', min(target_range) + max(target_range))
