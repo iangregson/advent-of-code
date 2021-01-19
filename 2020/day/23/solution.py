@@ -73,3 +73,46 @@ for move in range(1, N_MOVES + 1):
 idx = q.index(1)
 q.rotate(-idx)
 print('Part 1:', "".join([str(cup) for cup in list(q)][1:]))
+
+def parse(cups):
+    start_cup = cups[0]
+    successors = [0] * (len(cups) + 1)
+
+    for i in range(len(cups) - 1):
+        successors[cups[i]] = cups[i + 1]
+    successors[cups[-1]] = start_cup
+
+    return start_cup, successors
+
+def move(current_cup, succ):
+    p0 = succ[current_cup]
+    p1 = succ[p0]
+    p2 = succ[p1]
+    nextCup = succ[p2]
+
+    destCup = current_cup - 1
+    while True:
+        if destCup < 1:
+            destCup = max(succ)
+        if destCup not in (p0, p1, p2):
+            break
+        destCup = destCup - 1
+
+    succ[current_cup] = nextCup
+    succ[p2] = succ[destCup]
+    succ[destCup] = p0
+    return nextCup
+
+
+current_cup, successors = parse(cups)
+ms = max(successors)
+successors.extend(range(ms + 2, 1000000 + 2))
+successors[cups[-1]] = ms + 1
+successors[1000000] = cups[0]
+
+for _ in range(10000000):
+    current_cup = move(current_cup, successors)
+
+result = successors[1] * successors[successors[1]]
+
+print('Part 2:', result)
