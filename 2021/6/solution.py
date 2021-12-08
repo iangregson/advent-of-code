@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from collections import Counter
+from collections import defaultdict
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 file = open(dir_path + "/input.txt", "r")
@@ -52,7 +52,12 @@ print(len(ints))
 
 file = open(dir_path + "/input.txt", "r")
 ints = [int(n) for n in file.read().strip().split(',')]
-ages = Counter(ints)
+ints = [3,4,3,1,2]
+
+ages = defaultdict(int)
+for n in ints:
+  ages[n] += 1
+
 for _ in range(256):
   ages = {n: ages[n + 1] for n in range(-1, 8)}
   ages[8] = ages[-1]
