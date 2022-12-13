@@ -16,7 +16,7 @@ for y in range(M):
       start_location = (x,y)
 
 Map[start_location[1]][start_location[0]] = 'a'
-Map[target_location[1]][target_location[0]] = chr(ord('z')+1)
+Map[target_location[1]][target_location[0]] = 'z'
 
 def valid_move(cpos, npos, Map):
   M, N, = len(Map), len(Map[0])
