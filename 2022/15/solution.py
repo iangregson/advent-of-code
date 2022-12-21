@@ -1,5 +1,4 @@
 from pathlib import Path
-import random
 
 file = Path(__file__).parent / 'input.txt'
 Y = 2000000
@@ -8,12 +7,12 @@ MIN_X = 0
 MAX_Y = 4000000
 MIN_Y = 0
 
-file = Path(__file__).parent / 'test_input.txt'
-Y = 10
-MAX_X = 20
-MIN_X = 0
-MAX_Y = 20
-MIN_Y = 0
+# file = Path(__file__).parent / 'test_input.txt'
+# Y = 10
+# MAX_X = 20
+# MIN_X = 0
+# MAX_Y = 20
+# MIN_Y = 0
 
 text = file.read_text().splitlines()
 
@@ -85,6 +84,7 @@ class Sensor():
 
   def covers(self, pos):
     return self.distance_to(pos) <= self.range
+    
 
 class Grid():
   def __init__(self, sensors, beacons) -> None:
@@ -179,4 +179,21 @@ def count_covered(prow):
 
 print("Part 1:", count_covered(print_row(grid, Y)))
 
+def walk_perimeters(grid):
+  for sensor in grid.sensors.values():
+    # walk the perimeter and check if each adjacent position is 
+    # covered. If not, we have a winner
+    for dx in range(sensor.range + 2):
+      dy = (sensor.range + 1) - dx
+      for signx, signy in [(-1,-1),(-1,1),(1,-1),(1,1)]:
+        x = sensor.x + (dx * signx)
+        y = sensor.y + (dy * signy)
+        
+        if not(0 <= x <= MAX_X and 0 <= y <= MAX_Y):
+          continue
+        
+        if not grid.is_covered((x,y)):
+          return x * 4000000 + y
 
+
+print("Part 2:", walk_perimeters(grid))
