@@ -1,96 +1,202 @@
-#!/usr/bin/env python3
+# Thanks to https://github.com/coocos/advent-of-code-2021 for the education!
 
-import os
-import sys
-from collections import defaultdict, Counter, deque, namedtuple
-from enum import Enum
-import itertools
-import functools
-import operator
-import random
-
-# sys.setrecursionlimit(100000)
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-file = open(dir_path + "/input.txt", "r")
-lines = [line.strip() for line in file.readlines()]
-
-lines = [
-  '#############',
-  '#...........#',
-  '###B#B#D#D###',
-  '  #C#A#A#C#',
-  '  #########',
-]
+from __future__ import annotations
+from collections import deque, defaultdict
+from heapq import heappush, heappop
+from dataclasses import dataclass
+from typing import Literal, Iterable, Deque
+from pathlib import Path
 
 
-lines = [ # 12521
-  '#############',
-  '#...........#',
-  '###B#C#B#D###',
-  '  #A#D#C#A#',
-  '  #########',
-]
+@dataclass(frozen=True, order=True)
+class Point:
+
+    x: int
+    y: int
+
+    def neighbours(self) -> Iterable[Point]:
+        for x, y in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
+            yield Point(self.x + x, self.y + y)
 
 
-COSTS = {'A': 1, 'B': 10, 'C': 100, 'D': 1000}
+@dataclass(frozen=True, order=True)
+class Pod:
 
-game_state = {}
+    type: Literal["A", "B", "C", "D"]
+    pos: Point
 
-def puzzle_complete(game_state):
-  return False
-
-# keep making random moves, according to the constraints, until the 
-# puzzle is complete. When any 1 pod starts to move, it tries to go
-# directly to it's house. 
-
-# When a move is complete, we want to remember that move and start from
-# this position again.
-
-
-
-class GameBoard():
-  def __init__(self) -> None:
-    # it's a 13x5 grid
-    self.width = 13
-    self.height = 5
-    # but the only empty positions are the hallway 
-    # on the first row, and it's adjoining rooms
-    self.hallway = set([(x,1) for x in range(1,12)])
-    self.room_a = set([(3,2),(3,3)])
-    self.room_b = set([(5,2),(5,3)])
-    self.room_c = set([(7,2),(7,3)])
-    self.room_d = set([(9,2),(9,3)])
-    self.rooms = set.union(self.room_a, self.room_b, self.room_c, self.room_d)
-
-    self.bots = {
-      'A': [(3,3),(9,3)],
-      'B': [(3,2),(7,2)],
-      'C': [(5,2),(7,3)],
-      'D': [(5,3),(9,2)]
-    }
-
-  def __str__(self):
-    rows = []
-    for y in range(self.height):
-      row = []
-      for x in range(self.width):
-        if (x,y) in self.hallway:
-          row += '.'
-        elif (x,y) in self.rooms:
-          row += '.'
+    def cost(self) -> int:
+        if self.type == "A":
+            return 1
+        elif self.type == "B":
+            return 10
+        elif self.type == "C":
+            return 100
         else:
-          row += '#'
-      rows.append(row)
+            return 1000
 
-    for bot, bot_locs in self.bots.items():
-      for (x,y) in bot_locs:
-        rows[y][x] = bot
-    
-    return "\n".join(["".join(row) for row in rows])
 
-    
+rooms_small = {
+    "A": [Point(3, 2), Point(3, 3)],
+    "B": [Point(5, 2), Point(5, 3)],
+    "C": [Point(7, 2), Point(7, 3)],
+    "D": [Point(9, 2), Point(9, 3)],
+}
 
-board = GameBoard()
+rooms_large = {
+    "A": rooms_small["A"] + [Point(3, 4), Point(3, 5)],
+    "B": rooms_small["B"] + [Point(5, 4), Point(5, 5)],
+    "C": rooms_small["C"] + [Point(7, 4), Point(7, 5)],
+    "D": rooms_small["D"] + [Point(9, 4), Point(9, 5)],
+}
 
-print(board)
+room_points = set()
+for points in rooms_large.values():
+    for point in points:
+        room_points.add(point)
+
+hallway = [
+    Point(1, 1),
+    Point(2, 1),
+    Point(4, 1),
+    Point(6, 1),
+    Point(8, 1),
+    Point(10, 1),
+    Point(11, 1),
+]
+
+
+@dataclass(frozen=True, order=True)
+class State:
+
+    pods: frozenset[Pod]
+    burrow: frozenset[Point]
+
+    def is_valid(self) -> bool:
+        for pod in self.pods:
+            if pod.pos not in self.rooms[pod.type]:
+                return False
+        return True
+
+    @property
+    def rooms(self) -> dict[str, list[Point]]:
+        return rooms_small if len(self.pods) == 8 else rooms_large
+
+    def possible_points(self, pod: Pod) -> dict[Point, int]:
+        occupied = {other.pos for other in self.pods if other != pod}
+        queue: Deque[tuple[int, Point]] = deque([(0, pod.pos)])
+        visited = {pod.pos: 0}
+
+        while queue:
+            cost, pos = queue.popleft()
+            for neighbour in pos.neighbours():
+                if (
+                    neighbour in self.burrow
+                    and neighbour not in occupied
+                    and neighbour not in visited
+                ):
+                    queue.append((cost + pod.cost(), neighbour))
+                    visited[neighbour] = cost + pod.cost()
+        return visited
+
+    def moves(self, pod: Pod) -> Iterable[tuple[int, Point]]:
+
+        # Pod is within the correct room
+        if pod.pos in self.rooms[pod.type]:
+            # Already at the bottom, do not move
+            if pod.pos == self.rooms[pod.type][-1]:
+                return
+            # Room is already full with correct pods
+            pods_in_room = []
+            for other in self.pods:
+                if other.pos in self.rooms[pod.type] and other.type == pod.type:
+                    pods_in_room.append(other)
+            if len(pods_in_room) == len(self.rooms[pod.type]):
+                return
+            # Move within the room
+            possible_points = self.possible_points(pod)
+            for point in self.rooms[pod.type]:
+                if point != pod.pos and point in possible_points:
+                    yield possible_points[point], point
+            # Move to the hallway
+            for point in hallway:
+                if point in possible_points:
+                    yield possible_points[point], point
+        # Pod is within some other room
+        elif pod.pos in room_points:
+            possible_points = self.possible_points(pod)
+            for point in hallway:
+                if point in possible_points:
+                    yield possible_points[point], point
+        # Pod is in the hallway
+        else:
+            # Target room contains pod from other color - do not move into it
+            for other in self.pods:
+                if other.pos in self.rooms[pod.type] and other.type != pod.type:
+                    return
+            possible_points = self.possible_points(pod)
+            for point in self.rooms[pod.type]:
+                if point in possible_points:
+                    yield possible_points[point], point
+
+
+def parse_input(input_file: str) -> State:
+
+    pods: set[Pod] = set()
+    burrow: set[Point] = set()
+
+    for y, row in enumerate(
+        (Path(__file__).parent / input_file).read_text().splitlines()
+    ):
+        for x, cell in enumerate(row):
+            point = Point(x, y)
+            if cell in "ABCD":
+                pods.add(Pod(cell, point))
+                burrow.add(point)
+            elif cell == ".":
+                burrow.add(point)
+
+    return State(frozenset(pods), frozenset(burrow))
+
+
+def least_energy(initial_state: State) -> int:
+
+    heap: list[tuple[int, State]] = []
+    heappush(heap, (0, initial_state))
+    costs = defaultdict(lambda: 1_000_000)
+
+    while heap:
+
+        cost, state = heappop(heap)
+        if state.is_valid():
+            return cost
+
+        if costs[state.pods] <= cost:
+            continue
+        costs[state.pods] = cost
+
+        for pod in state.pods:
+            for move_cost, point in state.moves(pod):
+                pods = frozenset(
+                    [Pod(pod.type, point)] + [p for p in state.pods if p != pod]
+                )
+                next_state = State(pods, state.burrow)
+                if costs[next_state.pods] > cost + move_cost:
+                    heappush(heap, (cost + move_cost, next_state))
+
+    return -1
+
+
+def solve() -> None:
+
+    # First part
+    state = parse_input("input_1.txt")
+    print(least_energy(state))
+
+    # Second part
+    state = parse_input("input_2.txt")
+    print(least_energy(state))
+
+
+if __name__ == "__main__":
+    solve()
