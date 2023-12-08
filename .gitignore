@@ -130,6 +130,6 @@ dmypy.json
 
 # Ignore puzzle input files
 input.*
-example.*
+example*
 *input*
 .DS_Store
