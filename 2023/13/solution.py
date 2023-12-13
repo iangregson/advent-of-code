@@ -103,12 +103,12 @@ def find_symmetry(pattern: str) -> (int, bool):
   pattern = pattern.split('\n')
   vertical_symmetry = find_vertical_symmetry(pattern)
   if vertical_symmetry > 0:
-    print('vertical', vertical_symmetry)
+    # print('vertical', vertical_symmetry)
     return vertical_symmetry, True
 
   horizontal_symmetry = find_horizontal_symmetry(pattern)
   if horizontal_symmetry > 0:
-    print('horizontal', horizontal_symmetry)
+    # print('horizontal', horizontal_symmetry)
     return horizontal_symmetry, False
   
   print('None')
@@ -128,3 +128,72 @@ print(ans)
 
 # find_symmetry(patterns[2])
 
+# part 2 -------------------------------------------
+
+"""
+The 'candidates' approach from part 1 one won't work. 
+Maybe just need to compare all with all. Should be fine 
+because each pattern is fairly small.
+"""
+
+def find_vertical_symmetry(pattern: list[str]) -> int:
+  width, height = len(pattern[0]), len(pattern)
+  for x in range(width-1):
+    errors = 0
+    for xx in range(width):
+      l,r = x - xx, x + xx + 1
+      if 0 <= l < r < width:
+        for y in range(height):
+          if pattern[y][l] != pattern[y][r]:
+            errors += 1
+
+    # we want the off by 1
+    if errors == 1:
+      return x + 1
+  
+  return -1
+
+
+def find_horizontal_symmetry(pattern) -> int:
+  width, height = len(pattern[0]), len(pattern)
+  for y in range(height-1):
+    errors = 0
+    for yy in range(height):
+      u,d = y - yy, y + yy + 1
+      if 0 <= u < d < height:
+        for x in range(width):
+          if pattern[u][x] != pattern[d][x]:
+            errors += 1
+
+    # we want the off by 1
+    if errors == 1:
+      return y + 1
+  
+  return -1
+
+def find_symmetry(pattern: str) -> (int, bool):
+  pattern = pattern.split('\n')
+  vertical_symmetry = find_vertical_symmetry(pattern)
+  if vertical_symmetry > 0:
+    # print('vertical', vertical_symmetry)
+    return vertical_symmetry, True
+
+  horizontal_symmetry = find_horizontal_symmetry(pattern)
+  if horizontal_symmetry > 0:
+    # print('horizontal', horizontal_symmetry)
+    return horizontal_symmetry, False
+  
+  # print('None')
+  return 0, False
+
+
+patterns = text.split('\n\n')
+ans = 0
+for pattern in patterns:
+  idx, is_vertical = find_symmetry(pattern)
+  if is_vertical:
+    ans += idx
+  else:
+    ans += idx * 100
+
+print(ans)
