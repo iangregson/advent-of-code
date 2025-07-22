@@ -12,6 +12,6 @@
   "author": "Ian Gregson <ian@gregson.me> (https://github.com/iangregson)",
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.19.4"
   }
 }
